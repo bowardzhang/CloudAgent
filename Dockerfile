@@ -16,11 +16,11 @@ COPY package.json ./
 RUN npm install
 
 COPY start.js ./
+COPY src ./src
 
 ENV NODE_ENV=production
 ENV HOME=/data
-ENV PI_CODING_AGENT_DIR=/data/.pi/agent
-ENV PI_WEB_HOSTNAME=0.0.0.0
 ENV PI_WEB_NO_OPEN=1
+# start.js derives PI_CODING_AGENT_DIR, the bind hostname and the internal port.
 
 CMD ["node", "start.js"]

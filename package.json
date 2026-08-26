@@ -6,7 +6,8 @@
     "node": ">=22.19.0"
   },
   "scripts": {
-    "start": "node start.js"
+    "start": "node start.js",
+    "test": "node --test src/*.test.mjs"
   },
   "dependencies": {
     "@agegr/pi-web": "latest",
