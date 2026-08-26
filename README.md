@@ -41,6 +41,37 @@ configured through `PI_WEB_HOSTNAME` is still honoured.
 Rotating `PI_WEB_PASSWORD` invalidates all existing sessions, because the password is folded into
 the cookie signing key.
 
+## GitHub access for the agent
+
+Set `GITHUB_TOKEN` to a GitHub Personal Access Token in the Railway service variables. On every
+boot `start.js` writes `$PI_WEB_DATA_DIR/.gitconfig` (i.e. `~/.gitconfig`) with:
+
+- a credential helper scoped to `https://github.com` that reads the token from the environment,
+- `insteadOf` rewrites so `git@github.com:` and `ssh://git@github.com/` remotes use HTTPS too.
+
+This gives the agent GitHub access that is global (a `~/.gitconfig`, so every repository and every
+session sees it) and durable (rebuilt from the environment at startup, so it survives restarts and
+redeploys even without a mounted volume).
+
+**The token is never written to disk.** The helper interpolates `$GITHUB_TOKEN` at call time, so
+the config file holds only the shell snippet. Rotating the token in Railway takes effect on the
+next deploy with no file to clean up.
+
+`GH_TOKEN` is exported alongside `GITHUB_TOKEN`, so the GitHub CLI authenticates without
+`gh auth login` if you add `gh` to the image. Set `GIT_USER_NAME` and `GIT_USER_EMAIL` as well, or
+`git commit` fails with "Please tell me who you are".
+
+| Variable | Purpose |
+| --- | --- |
+| `GITHUB_TOKEN` (or `GH_TOKEN`) | Personal Access Token used for GitHub HTTPS auth. |
+| `GIT_USER_NAME` | `user.name` for commits. |
+| `GIT_USER_EMAIL` | `user.email` for commits. |
+
+Scope the token narrowly: a fine-grained token limited to the repositories the agent needs, with
+Contents and Pull requests read/write plus Metadata read, and an expiry date. The agent runs shell
+commands on your behalf, so anything it executes can read `$GITHUB_TOKEN` — treat the token's blast
+radius as the agent's blast radius.
+
 ## Local development
 
 ```sh

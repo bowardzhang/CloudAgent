@@ -1,12 +1,18 @@
 import { spawn } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 
 import { createAuthProxy, LOGIN_PATH } from "./src/auth-proxy.js";
 import { readConfig } from "./src/config.js";
+import { configureGitAuth, readGitAuthEnv, tokenEnv } from "./src/git-auth.js";
 
 const config = readConfig(process.env);
 
 // Railway mounts the persistent volume at /data; override only for local runs.
 const dataDir = process.env.PI_WEB_DATA_DIR?.trim() || "/data";
+fs.mkdirSync(dataDir, { recursive: true });
+
+const gitAuth = readGitAuthEnv(process.env);
 
 const childEnv = {
   ...process.env,
@@ -15,8 +21,23 @@ const childEnv = {
   // pi-web now sits behind the auth proxy, so it only ever listens on loopback.
   PI_WEB_HOSTNAME: config.upstreamHost,
   PI_WEB_NO_OPEN: "1",
-  PORT: String(config.upstreamPort)
+  PORT: String(config.upstreamPort),
+  ...tokenEnv(gitAuth.token)
 };
+
+// Rebuilt from the environment on every boot, so GitHub auth survives restarts
+// and redeploys whether or not a volume is mounted at the data directory.
+const gitConfigPath = path.join(dataDir, ".gitconfig");
+try {
+  const configured = configureGitAuth({ configPath: gitConfigPath, ...gitAuth });
+  console.log(
+    configured.length > 0
+      ? `Configured ${gitConfigPath}: ${configured.join(", ")}`
+      : "No GITHUB_TOKEN set — git will not be able to authenticate to GitHub."
+  );
+} catch (error) {
+  console.error(`Could not write git config at ${gitConfigPath}: ${error.message}`);
+}
 
 // pi-web's middleware rejects requests whose Host header is not an allowed
 // host. Behind the proxy the Host header still carries the public domain, so
