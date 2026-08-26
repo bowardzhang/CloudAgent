@@ -1,0 +1,12 @@
+{
+  "name": "pi-railway",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node start.js"
+  },
+  "dependencies": {
+    "@agegr/pi-web": "latest",
+    "@earendil-works/pi-coding-agent": "latest"
+  }
+}
