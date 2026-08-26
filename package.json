@@ -1,6 +1,13 @@
 {
-  "name": "pi-railway",
+  "name": "cloudagent",
+  "version": "1.0.0",
   "private": true,
+  "description": "Self-host the pi coding agent's web UI behind a real login page",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bowardzhang/CloudAgent.git"
+  },
   "type": "module",
   "engines": {
     "node": ">=22.19.0"
